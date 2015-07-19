@@ -18,6 +18,10 @@ group "01.state_est" {
         exec = "se-fusion";
         host = "localhost";
     }
+    cmd "state-sync" {
+        exec = "se-state-sync-simple-hyq";
+        host = "localhost";
+    }
 }
 
 group "01.state_mit_from_logfile" {
@@ -30,6 +34,11 @@ group "01.state_mit_from_logfile" {
 
 cmd "log_terrain" {
     exec = "lcm-logplayer-gui /home/mfallon/logs/hyq/2015-04-30-forward-back/2015-04-30-16-53-45.lcmlog -p";
+    host = "localhost";
+}
+
+cmd "log_trot" {
+    exec = "lcm-logplayer-gui /home/mfallon/logs/hyq/2015-07-10-trot/dataset_marco6_2015-07-10-13-26-55.lcmlog -p";
     host = "localhost";
 }
 
