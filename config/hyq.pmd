@@ -80,14 +80,15 @@ group "02.ros" {
         host = "localhost";
     }
 }
-   cmd "ethzest"{
-     exec = "/home/mcamurri/git/software/sl-state-estimator/build/kin_estimator";
-     host = "localhost";
-  }
+
+cmd "ethzest"{
+    exec = "/home/mcamurri/git/software/sl-state-estimator/build/kin_estimator";
+    host = "localhost";
+}
 
 cmd "signal-scope" {
-exec = "signal-scope";
-host = "localhost";
+    exec = "signal-scope";
+    host = "localhost";
 }
 
 script "0.full" {
