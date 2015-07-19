@@ -13,7 +13,6 @@ group "00.params_and_model_pub" {
 
 group "01.state_est" {
 
-
     cmd "fusion" {
         exec = "se-fusion";
         host = "localhost";
@@ -55,6 +54,11 @@ cmd "log_walk" {
 
 cmd "log_walk_alt" {
     exec = "lcm-logplayer-gui /home/mcamurri/alternative-log/lcmlog-2015-07-28.05 -p";
+    host = "localhost";
+}
+
+cmd "log_trot" {
+    exec = "lcm-logplayer-gui /home/mfallon/logs/hyq/2015-07-10-trot/dataset_marco6_2015-07-10-13-26-55.lcmlog -p";
     host = "localhost";
 }
 
