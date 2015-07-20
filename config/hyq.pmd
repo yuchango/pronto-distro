@@ -73,6 +73,12 @@ cmd "bot-spy" {
 }
 
 
+cmd "bot-spy" {
+    exec = "bot-spy";
+    host = "localhost";
+}
+
+
 group "02.ros" {
 
     cmd "roscore" {
