@@ -225,31 +225,16 @@ void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg){
 
   Eigen::Isometry3d c = a*b;
 
-  /*
-  bot_core::pose_t pose_msg2;
-  pose_msg2.utime = (int64_t) floor(msg->header.stamp.toNSec()/1000);
-  pose_msg2.pos[0] = b.translation().x();
-  pose_msg2.pos[1] = b.translation().y();
-  pose_msg2.pos[2] = b.translation().z();
-  Eigen::Quaterniond q_b = Eigen::Quaterniond(b.rotation());
-  pose_msg2.orientation[0] =  q_b.w();
-  pose_msg2.orientation[1] =  q_b.x();
-  pose_msg2.orientation[2] =  q_b.y();
-  pose_msg2.orientation[3] =  q_b.z();
-  lcm_publish_.publish("POSE_XXX", &pose_msg2);
-  */
-
-
-  bot_core::pose_t pose_msg;
+  bot_core::rigid_transform_t pose_msg;
   pose_msg.utime = (int64_t) floor(msg->header.stamp.toNSec()/1000);
-  pose_msg.pos[0] = msg->transform.translation.x;
-  pose_msg.pos[1] = msg->transform.translation.y;
-  pose_msg.pos[2] = msg->transform.translation.z;
-  pose_msg.orientation[0] =  msg->transform.rotation.w;
-  pose_msg.orientation[1] =  msg->transform.rotation.x;
-  pose_msg.orientation[2] =  msg->transform.rotation.y;
-  pose_msg.orientation[3] =  msg->transform.rotation.z;
-  lcm_publish_.publish("POSE_VICON", &pose_msg);
+  pose_msg.trans[0] = msg->transform.translation.x;
+  pose_msg.trans[1] = msg->transform.translation.y;
+  pose_msg.trans[2] = msg->transform.translation.z;
+  pose_msg.quat[0] =  msg->transform.rotation.w;
+  pose_msg.quat[1] =  msg->transform.rotation.x;
+  pose_msg.quat[2] =  msg->transform.rotation.y;
+  pose_msg.quat[3] =  msg->transform.rotation.z;
+  lcm_publish_.publish("VICONSYSTEM_TO_LOCAL", &pose_msg);
 
 
   bot_core::pose_t pose_msg3;
@@ -263,6 +248,18 @@ void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg){
   pose_msg3.orientation[2] =  c_q.y();
   pose_msg3.orientation[3] =  c_q.z();
   lcm_publish_.publish("POSE_BODY", &pose_msg3);
+  lcm_publish_.publish("POSE_VICON", &pose_msg3);
+
+  bot_core::rigid_transform_t pose_msg4;
+  pose_msg4.utime = (int64_t) floor(msg->header.stamp.toNSec()/1000);
+  pose_msg4.trans[0] = c.translation().x();
+  pose_msg4.trans[1] = c.translation().y();
+  pose_msg4.trans[2] = c.translation().z();
+  pose_msg4.quat[0] =  c_q.w();
+  pose_msg4.quat[1] =  c_q.x();
+  pose_msg4.quat[2] =  c_q.y();
+  pose_msg4.quat[3] =  c_q.z();
+  lcm_publish_.publish("VICON_TO_LOCAL", &pose_msg4);
 
 
 }
