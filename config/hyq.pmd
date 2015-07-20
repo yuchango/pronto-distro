@@ -48,6 +48,12 @@ cmd "viewer" {
 }
 
 
+cmd "bot-spy" {
+    exec = "bot-spy";
+    host = "localhost";
+}
+
+
 group "02.ros" {
 
     cmd "roscore" {
@@ -55,7 +61,7 @@ group "02.ros" {
         host = "localhost";
     }
     cmd "ros2lcm" {
-        exec = "rosrun  pronto_translators ros2l_hyq ";
+        exec = "rosrun  pronto_translators ros2lcm_hyq ";
         host = "localhost";
     }
 }
