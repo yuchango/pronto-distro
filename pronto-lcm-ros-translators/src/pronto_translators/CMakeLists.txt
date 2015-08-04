@@ -15,7 +15,9 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   atlas_hardware_interface
+#  pcl_ros pcl_conversions
 )
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -193,4 +195,8 @@ pods_use_pkg_config_packages(ros2lcm_thormang lcm lcmtypes_pronto-lcmtypes bot2-
 
 add_executable(ros2lcm_hyq src/ros2lcm_hyq.cpp)
 target_link_libraries(ros2lcm_hyq ${catkin_LIBRARIES})
-pods_use_pkg_config_packages(ros2lcm_hyq lcm lcmtypes_pronto-lcmtypes bot2-core eigen3) 
+pods_use_pkg_config_packages(ros2lcm_hyq lcm lcmtypes_pronto-lcmtypes bot2-core eigen3)
+
+#add_executable(ros2lcm_velodyne src/ros2lcm_velodyne.cpp)
+#target_link_libraries(ros2lcm_velodyne ${catkin_LIBRARIES})
+#pods_use_pkg_config_packages(ros2lcm_velodyne lcm lcmtypes_pronto-lcmtypes bot2-core eigen3)
