@@ -15,6 +15,7 @@
 
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/JointState.h>
+#include <sensor_msgs/LaserScan.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Wrench.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -34,6 +35,8 @@
 #include "lcmtypes/pronto/atlas_raw_imu_batch_t.hpp"
 #include "lcmtypes/mav/ins_t.hpp"
 
+#define MAX_LIDAR_RANGE 60.0
+
 using namespace std;
 
 class App{
@@ -43,7 +46,7 @@ public:
 
 private:
   bool send_ground_truth_; // publish control msgs to LCM
-  lcm::LCM lcm_publish_ ;
+  lcm::LCM lcmPublish_ ;
   ros::NodeHandle node_;
   
   // Atlas Joints and FT sensor
@@ -63,6 +66,10 @@ private:
   ros::Subscriber imuSensorSub_;
   void imuSensorCallback(const sensor_msgs::ImuConstPtr& msg);
 
+  ros::Subscriber laserScanSub_;
+  void laserScanCallback(const sensor_msgs::LaserScanConstPtr& msg);
+  void publishLidar(const sensor_msgs::LaserScanConstPtr& msg,string channel );
+
   int64_t last_joint_state_utime_;
   bool verbose_;
 };
@@ -70,7 +77,7 @@ private:
 App::App(ros::NodeHandle node_, bool send_ground_truth_) :
     send_ground_truth_(send_ground_truth_), node_(node_){
   ROS_INFO("Initializing Translator");
-  if(!lcm_publish_.good()){
+  if(!lcmPublish_.good()){
     std::cerr <<"ERROR: lcm is not good()" <<std::endl;
   }
 
@@ -82,6 +89,8 @@ App::App(ros::NodeHandle node_, bool send_ground_truth_) :
 
   pose_vicon_sub_ = node_.subscribe(string("vicon/hyq/body"), 100, &App::pose_vicon_cb,this);
   imuSensorSub_ = node_.subscribe(string("Imu"), 100, &App::imuSensorCallback,this);
+
+  laserScanSub_ = node_.subscribe(string("scan"), 100, &App::laserScanCallback,this);
 
   verbose_ = false;
 };
@@ -127,7 +136,7 @@ void App::joint_states_cb(const sensor_msgs::JointStateConstPtr& msg){
     msg_out.joint_effort.push_back( (float)ptu_effort_[i]);
   }
   msg_out.num_joints = msg_out.joint_effort.size();
-  lcm_publish_.publish("HYQ_STATE", &msg_out);
+  lcmPublish_.publish("HYQ_STATE", &msg_out);
 
 
   if (1==0){ 
@@ -149,7 +158,7 @@ void App::joint_states_cb(const sensor_msgs::JointStateConstPtr& msg){
     msg_out.joint_effort.push_back( (float)ptu_effort_[i]);
   }
   msg_out.num_joints = msg_out.joint_effort.size();
-  lcm_publish_.publish("EST_ROBOT_STATE", &msg_out);
+  lcmPublish_.publish("EST_ROBOT_STATE", &msg_out);
   }
 
 
@@ -203,8 +212,8 @@ void App::pose_bdi_cb(const nav_msgs::OdometryConstPtr& msg){
   //pose_msg.accel[1] = imu_msg_.linear_acceleration.y;
   //pose_msg.accel[2] = imu_msg_.linear_acceleration.z;
 
-  lcm_publish_.publish("POSE_BDI", &pose_msg);   
-  // lcm_publish_.publish("POSE_BODY", &pose_msg);    // for now
+  lcmPublish_.publish("POSE_BDI", &pose_msg);   
+  // lcmPublish_.publish("POSE_BODY", &pose_msg);    // for now
 }
 
 
@@ -234,7 +243,7 @@ void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg){
   pose_msg.quat[1] =  msg->transform.rotation.x;
   pose_msg.quat[2] =  msg->transform.rotation.y;
   pose_msg.quat[3] =  msg->transform.rotation.z;
-  lcm_publish_.publish("VICONSYSTEM_TO_LOCAL", &pose_msg);
+  lcmPublish_.publish("VICONSYSTEM_TO_LOCAL", &pose_msg);
 
 
   bot_core::pose_t pose_msg3;
@@ -247,8 +256,8 @@ void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg){
   pose_msg3.orientation[1] =  c_q.x();
   pose_msg3.orientation[2] =  c_q.y();
   pose_msg3.orientation[3] =  c_q.z();
-  lcm_publish_.publish("POSE_BODY", &pose_msg3);
-  lcm_publish_.publish("POSE_VICON", &pose_msg3);
+  lcmPublish_.publish("POSE_BODY", &pose_msg3);
+  lcmPublish_.publish("POSE_VICON", &pose_msg3);
 
   bot_core::rigid_transform_t pose_msg4;
   pose_msg4.utime = (int64_t) floor(msg->header.stamp.toNSec()/1000);
@@ -259,16 +268,11 @@ void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg){
   pose_msg4.quat[1] =  c_q.x();
   pose_msg4.quat[2] =  c_q.y();
   pose_msg4.quat[3] =  c_q.z();
-  lcm_publish_.publish("VICON_TO_LOCAL", &pose_msg4);
-
-
+  lcmPublish_.publish("VICON_TO_LOCAL", &pose_msg4);
 }
 
 
-
-
 void App::imuSensorCallback(const sensor_msgs::ImuConstPtr& msg){
-
   mav::ins_t imu;
   imu.utime = (int64_t) floor(msg->header.stamp.toNSec()/1000);
   imu.device_time = imu.utime;
@@ -287,10 +291,40 @@ void App::imuSensorCallback(const sensor_msgs::ImuConstPtr& msg){
   imu.quat[3] = msg->orientation.z;
   imu.pressure = 0;
   imu.rel_alt = 0;
-
-  lcm_publish_.publish( ("MICROSTRAIN_INS") , &imu);
+  lcmPublish_.publish( ("MICROSTRAIN_INS") , &imu);
 }
 
+
+int scan_counter=0;
+void App::laserScanCallback(const sensor_msgs::LaserScanConstPtr& msg){
+  if (scan_counter%80 ==0){
+    ROS_ERROR("LSCAN [%d]", scan_counter );
+    //std::cout << "SCAN " << scan_counter << "\n";
+  }  
+  scan_counter++;
+  publishLidar(msg, "SCAN");
+}
+
+
+void App::publishLidar(const sensor_msgs::LaserScanConstPtr& msg,string channel ){
+  bot_core::planar_lidar_t scan_out;
+  scan_out.ranges = msg->ranges;
+  for (size_t i=0; i < scan_out.ranges.size(); i++){
+    if (isnan(scan_out.ranges[i])){
+      scan_out.ranges[i] = MAX_LIDAR_RANGE;
+    } else if (isinf(scan_out.ranges[i])){
+      scan_out.ranges[i] = MAX_LIDAR_RANGE;
+    }
+  }
+
+  scan_out.intensities = msg->intensities;
+  scan_out.utime = (int64_t) floor(msg->header.stamp.toNSec()/1000);
+  scan_out.nranges =msg->ranges.size();
+  scan_out.nintensities=msg->intensities.size();
+  scan_out.rad0 = msg->angle_min;
+  scan_out.radstep = msg->angle_increment;
+  lcmPublish_.publish(channel.c_str(), &scan_out);
+}
 
 
 

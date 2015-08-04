@@ -22,6 +22,12 @@ group "01.state_est" {
         exec = "se-state-sync-simple-hyq";
         host = "localhost";
     }
+
+    cmd "lidar-odo" {
+        exec = "se-lidar-odometry  -o POSE_BODY_SCANMATCHER";
+        host = "localhost";
+    }
+
 }
 
 group "01.state_mit_from_logfile" {
