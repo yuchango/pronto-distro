@@ -31,7 +31,7 @@ group "01.state_est" {
 
 group "01.state_mit_from_logfile" {
     cmd "fusion" {
-        exec = "se-fusion  -L /home/mcamurri/datasets/lcmlogs/2015-04-30-16-53-45.lcmlog   -P hyq.cfg   -pr 0";
+        exec = "se-fusion  -L /home/mfallon/logs/hyq/2015-04-30-forward-back/2015-04-30-16-53-45.lcmlog   -P hyq.cfg   -pr 0";
         host = "localhost";
     }
 }
@@ -52,8 +52,8 @@ cmd "log_walk" {
     host = "localhost";
 }
 
-cmd "log_walk_alt" {
-    exec = "lcm-logplayer-gui /home/mcamurri/alternative-log/lcmlog-2015-07-28.05 -p";
+cmd "log_terrain" {
+    exec = "lcm-logplayer-gui /home/mfallon/logs/hyq/2015-04-30-forward-back/2015-04-30-16-53-45.lcmlog -p";
     host = "localhost";
 }
 
@@ -71,13 +71,6 @@ cmd "bot-spy" {
     exec = "bot-spy";
     host = "localhost";
 }
-
-
-cmd "bot-spy" {
-    exec = "bot-spy";
-    host = "localhost";
-}
-
 
 group "02.ros" {
 
