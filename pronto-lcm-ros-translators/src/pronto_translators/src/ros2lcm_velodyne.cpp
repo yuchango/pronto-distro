@@ -86,8 +86,10 @@ void App::headLeftImageCallback(const sensor_msgs::PointCloud2ConstPtr& msg){
 
 //  pcl::io::savePCDFileASCII ("test_pcd.pcd", *msg);
 
-  int64_t current_utime = 0;//(int64_t) floor(msg->header.stamp.toNSec()/1000);
+  int64_t current_utime = (int64_t) floor(msg->header.stamp.toNSec()/1000);
   pronto::pointcloud2_t lcm_msg;
+  lcm_msg.frame_id =msg->header.frame_id;
+  lcm_msg.seq =msg->header.seq;
   lcm_msg.utime =current_utime;
   lcm_msg.width =msg->width;
   lcm_msg.height =msg->height;
