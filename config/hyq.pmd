@@ -13,7 +13,6 @@ group "00.params_and_model_pub" {
 
 group "01.state_est" {
 
-
     cmd "fusion" {
         exec = "se-fusion";
         host = "localhost";
@@ -38,6 +37,21 @@ group "01.state_mit_from_logfile" {
 }
 
 
+cmd "log_trot" {
+    exec = "lcm-logplayer-gui /home/mcamurri/datasets/lcmlogs/2015-04-30-16-53-45.lcmlog -p";
+    host = "localhost";
+}
+
+cmd "log_trot_sim" {
+ exec = "lcm-logplayer-gui /home/mcamurri/lcmlog-2015-07-30.00 -p";
+host = "localhost";
+}
+
+cmd "log_walk" {
+    exec = "lcm-logplayer-gui /home/mcamurri/datasets/lcmlogs/2015-07-22-09-36-00.lcmlog -p";
+    host = "localhost";
+}
+
 cmd "log_terrain" {
     exec = "lcm-logplayer-gui /home/mfallon/logs/hyq/2015-04-30-forward-back/2015-04-30-16-53-45.lcmlog -p";
     host = "localhost";
@@ -53,12 +67,10 @@ cmd "viewer" {
     host = "localhost";
 }
 
-
 cmd "bot-spy" {
     exec = "bot-spy";
     host = "localhost";
 }
-
 
 group "02.ros" {
 
@@ -72,6 +84,15 @@ group "02.ros" {
     }
 }
 
+cmd "ethzest"{
+    exec = "/home/mcamurri/git/software/sl-state-estimator/build/kin_estimator";
+    host = "localhost";
+}
+
+cmd "signal-scope" {
+    exec = "signal-scope";
+    host = "localhost";
+}
 
 script "0.full" {
     start group "00.params_and_model_pub";
@@ -88,3 +109,23 @@ script "1.from_logfile" {
     start cmd "viewer";
 }
 
+script "2.walk_logfile" {
+   start group "00.params_and_model_pub";
+   wait ms 1000;
+   start cmd "viewer";
+   start cmd "bot-spy";
+   start cmd "log_walk";
+   start cmd "signal-scope";
+   start cmd "ethzest";
+   start group "01.state_est";
+}
+script "3.logfile_simdebug" {
+   start group "00.params_and_model_pub";
+   wait ms 1000;
+   start cmd "viewer";
+   start cmd "bot-spy";
+   start cmd "log_trot_sim";
+   start cmd "signal-scope";
+   start cmd "ethzest";
+   start cmd "state-sync";
+}

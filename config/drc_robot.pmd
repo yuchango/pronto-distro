@@ -33,15 +33,15 @@ group "01.state_mit" {
 }
 
 group "01.state_mit_from_logfile" {
-    cmd "fusion" {
-        exec = "se-fusion  -L /home/mfallon/logs/atlas/2015-04-29-terrain-success/terrain.lcmlog   -P drc_robot_from_logfile.cfg   -pr 0";
+    cmd "fusion-fromfile" {
+        exec = "se-fusion  -L /home/mcamurri/datasets/lcmlogs/2015-04-30-16-53-45.lcmlog  -P drc_robot_from_logfile.cfg   -pr 0";
         host = "localhost";
     }
 }
 
 
 cmd "log_terrain" {
-    exec = "lcm-logplayer-gui /home/mfallon/logs/atlas/2015-04-29-terrain-success/terrain.lcmlog -p";
+    exec = "lcm-logplayer-gui /home/mcamurri/datasets/lcmlogs/2015-04-30-16-53-45.lcmlog -p";
     host = "localhost";
 }
 
