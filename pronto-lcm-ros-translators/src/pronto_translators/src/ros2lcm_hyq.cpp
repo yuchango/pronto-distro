@@ -37,6 +37,7 @@
 
 #define MAX_LIDAR_RANGE 60.0
 
+
 using namespace std;
 
 class App{
@@ -72,6 +73,7 @@ private:
 
   int64_t last_joint_state_utime_;
   bool verbose_;
+    mav::ins_t imu;
 };
 
 App::App(ros::NodeHandle node_, bool send_ground_truth_) :
@@ -80,6 +82,17 @@ App::App(ros::NodeHandle node_, bool send_ground_truth_) :
   if(!lcmPublish_.good()){
     std::cerr <<"ERROR: lcm is not good()" <<std::endl;
   }
+
+for(int i=0; i<4; i++){
+    imu.quat[i] = 0;
+    if(i<3){
+        imu.accel[i] = 0;
+        imu.gyro[i] = 0;
+        imu.mag[i] = 0;
+    }
+}
+imu.pressure = 0;
+imu.rel_alt = 0;
 
   joint_states_sub_ = node_.subscribe(string("joint_states"), 100, &App::joint_states_cb,this);
   ptu_name_ = {"ptu_pan", "ptu_tilt"};
@@ -251,12 +264,25 @@ void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg){
   pose_msg3.pos[0] = c.translation().x();
   pose_msg3.pos[1] = c.translation().y();
   pose_msg3.pos[2] = c.translation().z();
+  pose_msg3.vel[0] = 0;
+  pose_msg3.vel[1] = 0;
+  pose_msg3.vel[2] = 0;
+  pose_msg3.accel[0] = 0;
+  pose_msg3.accel[1] = 0;
+  pose_msg3.accel[2] = 0;
+
   Eigen::Quaterniond c_q = Eigen::Quaterniond(c.rotation());
   pose_msg3.orientation[0] =  c_q.w();
   pose_msg3.orientation[1] =  c_q.x();
   pose_msg3.orientation[2] =  c_q.y();
   pose_msg3.orientation[3] =  c_q.z();
-  lcmPublish_.publish("POSE_BODY", &pose_msg3);
+
+  pose_msg3.rotation_rate[0] = 0;
+  pose_msg3.rotation_rate[1] = 0;
+  pose_msg3.rotation_rate[2] = 0;
+
+
+  //lcmPublish_.publish("POSE_BODY", &pose_msg3);
   lcmPublish_.publish("POSE_VICON", &pose_msg3);
 
   bot_core::rigid_transform_t pose_msg4;
@@ -273,24 +299,27 @@ void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg){
 
 
 void App::imuSensorCallback(const sensor_msgs::ImuConstPtr& msg){
-  mav::ins_t imu;
-  imu.utime = (int64_t) floor(msg->header.stamp.toNSec()/1000);
+
+  imu.utime = (int64_t) floor(msg->header.stamp.toNSec()/1000.0);
   imu.device_time = imu.utime;
+  if(imu.gyro[0] == msg->angular_velocity.x &&
+          imu.gyro[1] == msg->angular_velocity.y &&
+          imu.gyro[2] == msg->angular_velocity.z ){
+      return;
+  }
   imu.gyro[0] = msg->angular_velocity.x;
   imu.gyro[1] = msg->angular_velocity.y;
   imu.gyro[2] = msg->angular_velocity.z;
-  imu.mag[0] = 0;
-  imu.mag[1] = 0;
-  imu.mag[2] = 0;
+
   imu.accel[0] = msg->linear_acceleration.x;
   imu.accel[1] = msg->linear_acceleration.y;
   imu.accel[2] = msg->linear_acceleration.z;
+
   imu.quat[0] = msg->orientation.w;
   imu.quat[1] = msg->orientation.x;
   imu.quat[2] = msg->orientation.y;
   imu.quat[3] = msg->orientation.z;
-  imu.pressure = 0;
-  imu.rel_alt = 0;
+
   lcmPublish_.publish( ("MICROSTRAIN_INS") , &imu);
 }
 
