@@ -7,10 +7,16 @@
 
 findLCMTypes(os.path.expanduser('../../build/lib/python2.7/dist-packages/*'))
 
-joints = ['lf_hfe_joint', 'lf_haa_joint', 'lf_kfe_joint']
+joints = ['lf_haa_joint', 'rf_haa_joint', 'lh_haa_joint', 'rh_haa_joint']
 addSignals('HYQ_STATE', msg.utime, msg.joint_position, joints, keyLookup=msg.joint_name)
 
+addPlot()
+joints = ['lf_hfe_joint', 'rf_hfe_joint', 'lh_hfe_joint', 'rh_hfe_joint']
+addSignals('HYQ_STATE', msg.utime, msg.joint_position, joints, keyLookup=msg.joint_name)
 
+addPlot()
+joints = ['lf_kfe_joint', 'rf_kfe_joint', 'lh_kfe_joint', 'rh_kfe_joint']
+addSignals('HYQ_STATE', msg.utime, msg.joint_position, joints, keyLookup=msg.joint_name)
 
 # You can also define your own function to do the string lookup.
 # Note, in the following function, the string array is searched
