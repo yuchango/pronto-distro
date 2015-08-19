@@ -4,6 +4,8 @@
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include <velodyne_msgs/VelodyneScan.h>
+#include <velodyne_pointcloud/rawdata.h>
 #include <ros/ros.h>
 #include <ros/console.h>
 #include <cstdlib>
@@ -51,25 +53,54 @@ public:
 private:
   lcm::LCM lcmPublish_ ;
   ros::NodeHandle node_;
-
+  velodyne_rawdata::VPointCloud packet_;
   ros::Subscriber headLeftImageSub_;
+  ros::Subscriber velodyne_scan_sub_;
+  velodyne_rawdata::RawData rd_;
+  int counter;
+  double downsample_factor_;
+  int modulo;
+  int vid[32]; // velodyne index lookup table
 
   void headLeftImageCallback(const sensor_msgs::PointCloud2ConstPtr& msg);
+  void velodyneScanCallback(const velodyne_msgs::VelodyneScanConstPtr& msg);
 
 };
 
 App::App(ros::NodeHandle node_) :
-    node_(node_){
+    node_(node_), counter(0), downsample_factor_(0.5){
+
+
+modulo = (int)ceil(1.0 / downsample_factor_);
+for(int i=0; i<16;i++){
+    vid[i*2] = i*2;
+    vid[i*2+1] = i*2+1 + 15;
+}
+
+
   ROS_INFO("Initializing Translator");
   if(!lcmPublish_.good()){
     std::cerr <<"ERROR: lcm is not good()" <<std::endl;
   }
+  int sc = rd_.setup(node_);
+  if(sc == 0){
+      std::cout << "SETUP successful" << std::endl;
+  } else {
+      std::cout << "SETUP unsuccessful (code " << sc << ")" << std::endl;
+  }
+
+  rd_.setParameters(std::numeric_limits<double>::min(),
+                    std::numeric_limits<double>::max(),
+                    0.0,
+                    2*M_PI);
 
   std::string pointcloudTopic = "velodyne_points";
+  std::string velodyne_scan_topic = "velodyne_packets";
   //ros::NodeHandle nh_("~");
   // nh_.getParam("pointcloud_topic", pointcloudTopic);
   std::cout << "Subscribing to " << pointcloudTopic << std::endl;
-  headLeftImageSub_ = node_.subscribe(pointcloudTopic, 1, &App::headLeftImageCallback,this);
+  //headLeftImageSub_ = node_.subscribe(pointcloudTopic, 1, &App::headLeftImageCallback,this);
+  velodyne_scan_sub_ = node_.subscribe(velodyne_scan_topic, 1, &App::velodyneScanCallback,this);
 };
 
 App::~App()  {
@@ -112,6 +143,26 @@ void App::headLeftImageCallback(const sensor_msgs::PointCloud2ConstPtr& msg){
   lcm_msg.is_dense = msg->is_dense;
 
   lcmPublish_.publish("VELODYNE", &lcm_msg);
+}
+
+void App::velodyneScanCallback(const velodyne_msgs::VelodyneScanConstPtr &msg){
+pronto::pointcloud2_t lcm_msg;
+
+    for(int i=0; i<msg->packets.size();i++){
+    std::cout << "scan size: " << msg->packets.size() << std::endl;
+
+       rd_.unpack(msg->packets[i],packet_);
+
+
+       for(int j=0; j<packet_.size(); j++){
+
+       }
+
+       packet_.clear();
+
+    }
+    counter++;
+
 }
 
 
