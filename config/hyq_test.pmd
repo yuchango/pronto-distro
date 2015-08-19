@@ -1,6 +1,6 @@
 group "00.params_and_model_pub" {
     cmd "pserver" {
-        exec = "bot-param-server hyq.cfg";
+        exec = "bot-param-server hyq_test.cfg";
         host = "localhost";
     }
     cmd "model_LR_RR" {
@@ -128,7 +128,7 @@ cmd "ros_hyq_slam_color" {
 }
 
 cmd "viewer" {
-    exec = "pronto-viewer -c hyq.cfg";
+    exec = "pronto-viewer -c hyq_test.cfg";
     host = "localhost";
 }
 
@@ -427,7 +427,6 @@ script "10.state_est_lasers7" {
    wait ms 10000;
    start cmd "bag_lasers7";
 }
-
 
 script "11.evaluate_them_all" {
    start group "00.params_and_model_pub";
