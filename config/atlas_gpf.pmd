@@ -1,0 +1,52 @@
+cmd "bot-spy" {
+exec = "bot-spy";
+host = "localhost";
+}
+
+
+cmd "robot_model_pub_atlas" {
+exec = "robot_model_publisher /home/mcamurri/git/software/pronto-distro/models/atlas_v3/model_LN_RN.urdf";
+host = "localhost";
+}
+
+cmd "bot_param_server_atlas" {
+exec = "bot-param-server drc_robot_gpf.cfg";
+host = "localhost";
+}
+
+cmd "pronto_viewer_atlas" {
+exec = "pronto-viewer -c drc_robot_gpf.cfg";
+host = "localhost";
+}
+
+cmd "se_fusion_atlas" {
+   exec = "se-fusion -P drc_robot_gpf.cfg";
+   host = "localhost";
+}
+
+cmd "se_state_sync_atlas" { 
+exec = "se-state-sync-simple";
+host = "localhost";
+}
+
+cmd "gpf_laser" {
+   exec = "gpf-laser";
+   host = "localhost";
+}
+
+cmd "log_atlas" {
+exec = "lcm-logplayer-gui /home/mcamurri/datasets/hyq_velodyne/atlas/fwdbkwd-lcmlog-2014-04-21-15-29-robot -p";
+host = "localhost";
+}
+
+
+script "00.gpf_test_atlas" {
+   start cmd "robot_model_pub_atlas";
+   start cmd "bot-spy";
+   start cmd "bot_param_server_atlas";
+   start cmd "pronto_viewer_atlas";
+   start cmd "se_fusion_atlas";
+   start cmd "se_state_sync_atlas";
+   start cmd "gpf_laser";
+   start cmd "log_atlas";
+}
