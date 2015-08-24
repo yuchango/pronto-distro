@@ -43,9 +43,9 @@ cmd "lcm_final"{
     exec = "lcm-logplayer-gui /home/mcamurri/datasets/lcm/final_bag_2015-07-31-18-16-29.lcmlog -p";
     host = "localhost";
 }
-
+group "bags" {
 cmd "bag_lasers1" {
-    exec = "rosbag play  --clock /home/mcamurri/datasets/bags/lasers1_2015-07-29-15-55-20.bag";
+    exec = "rosbag play  --clock --rate 0.5 /home/mcamurri/datasets/bags/lasers1_2015-07-29-15-55-20.bag";
     host = "localhost";
 }
 cmd "bag_lasers2" {
@@ -86,7 +86,7 @@ cmd "bag_lasers7" {
    exec = "rosbag play --clock /home/mcamurri/datasets/bags/lasers6_2015-08-14-11-50-05.bag";
    host = "localhost";
 }
-
+}
 cmd "log_trot" {
     exec = "lcm-logplayer-gui /home/mcamurri/datasets/lcmlogs/2015-04-30-16-53-45.lcmlog -p";
     host = "localhost";
@@ -96,12 +96,7 @@ cmd "ros2lcm_mcamurri" {
     exec = "/home/mcamurri/Projects/ros2lcm/build/ros2lcm";
     host = "localhost";
 }
-
-cmd "log_trot_sim" {
- exec = "lcm-logplayer-gui /home/mcamurri/lcmlog-2015-07-30.00 -p";
-host = "localhost";
-}
-
+group "logs" {
 cmd "log_walk5" {
     exec = "lcm-logplayer-gui /home/mcamurri/datasets/lcm/walk5_2015-07-22-09-36-00.lcmlog -p";
     host = "localhost";
@@ -116,7 +111,7 @@ cmd "log_trot_mfallon" {
     exec = "lcm-logplayer-gui /home/mfallon/logs/hyq/2015-07-10-trot/dataset_marco6_2015-07-10-13-26-55.lcmlog -p";
     host = "localhost";
 }
-
+}
 cmd "ros_hyq_slam" {
     exec = "echo ciao";
     host = "localhost";
@@ -148,7 +143,7 @@ group "02.ros" {
         host = "localhost";
     }
 }
-
+group "ethz_estimators" {
 cmd "ethzest"{
     exec = "/home/mcamurri/git/software/sl-state-estimator/build/kin_estimator";
     host = "localhost";
@@ -201,53 +196,55 @@ cmd "ethz_est_lasers7"{
     host = "localhost";
 }
 
+}
+group "save_data" {
 cmd "sd_lasers1"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh lasers1_evaluateall_2";
+   exec = "bash /home/mcamurri/scripts/savedata.sh lasers1_evaluateall_3";
    host = "localhost";
 }
 
 cmd "sd_lasers2"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh lasers2_evaluateall_2";
+   exec = "bash /home/mcamurri/scripts/savedata.sh lasers2_evaluateall_3";
     host = "localhost";
 }
 
 cmd "sd_final"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh final_evaluateall_2";
+   exec = "bash /home/mcamurri/scripts/savedata.sh final_evaluateall_3";
    host = "localhost";
 }
 
 cmd "sd_walk5"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh walk5_evaluateall_2";
+   exec = "bash /home/mcamurri/scripts/savedata.sh walk5_evaluateall_3";
     host = "localhost";
 }
 
 cmd "sd_trot3"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh trot3_evaluateall_2";
+   exec = "bash /home/mcamurri/scripts/savedata.sh trot3_evaluateall_3";
     host = "localhost";
 }
 
 cmd "sd_trot4"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh trot4_evaluateall_2";
+   exec = "bash /home/mcamurri/scripts/savedata.sh trot4_evaluateall_3";
    host = "localhost";
 }
 
 cmd "sd_mfi"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh mfi_evaluateall_2";
+   exec = "bash /home/mcamurri/scripts/savedata.sh mfi_evaluateall_3";
    host = "localhost";
 }
 cmd "sd_lasers5"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh lasers5_evaluateall_2";
+   exec = "bash /home/mcamurri/scripts/savedata.sh lasers5_evaluateall_3";
    host = "localhost";
 }
 cmd "sd_lasers6"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh lasers6_evaluateall_2";
+   exec = "bash /home/mcamurri/scripts/savedata.sh lasers6_evaluateall_3";
    host = "localhost";
 }
 cmd "sd_lasers7"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh lasers7_evaluateall_2";
+   exec = "bash /home/mcamurri/scripts/savedata.sh lasers7_evaluateall_3";
    host = "localhost";
 }
-
+}
 
 cmd "signal-scope" {
     exec = "signal-scope";
@@ -569,7 +566,7 @@ script "11.evaluate_them_all" {
    start cmd "ros2lcm_mcamurri";
    start cmd "ros_hyq_slam";
    start group "01.state_est";
-   start cmd "ethz_est_laser7";
+   start cmd "ethz_est_lasers7";
    wait ms 10000;
    start cmd "bag_lasers7";
    wait ms 200000;
