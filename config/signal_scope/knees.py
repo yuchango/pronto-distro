@@ -1,15 +1,21 @@
 findLCMTypes(os.path.expanduser('../lib/python2.7/dist-packages/*'))
 
-joints = ['l_leg_kny','r_leg_kny']
-#addSignals('ATLAS_STATE', msg.utime, msg.joint_position, joints, keyLookup=msg.joint_name)
-addSignals('EST_ROBOT_STATE', msg.utime, msg.joint_position, joints, keyLookup=msg.joint_name)
+
+addSignal('HYQ_TAUDEBUG', msg.utime, msg.pos[2]);
+addSignal('HYQ_STATE',msg.utime,msg.joint_effort[2]);
 
 
 addPlot()
-#addSignals('ATLAS_STATE', msg.utime, msg.joint_effort, joints, keyLookup=msg.joint_name)
-addSignals('EST_ROBOT_STATE', msg.utime, msg.joint_effort, joints, keyLookup=msg.joint_name)
+addSignal('HYQ_TAUDEBUG', msg.utime, msg.vel[2]);
+addSignal('HYQ_STATE',msg.utime,msg.joint_effort[5])
+
+
 
 addPlot()
-#addSignals('ATLAS_STATE', msg.utime, msg.joint_velocity, joints, keyLookup=msg.joint_name)
-addSignals('EST_ROBOT_STATE', msg.utime, msg.joint_velocity, joints, keyLookup=msg.joint_name)
+addSignal('HYQ_TAUDEBUG', msg.utime, msg.accel[2]);
+addSignal('HYQ_STATE',msg.utime,msg.joint_effort[8]);
 
+
+addPlot()
+addSignal('HYQ_TAUDEBUG', msg.utime, msg.rotation_rate[2]);
+addSignal('HYQ_STATE',msg.utime,msg.joint_effort[11])
