@@ -45,7 +45,7 @@ cmd "lcm_final"{
 }
 group "bags" {
 cmd "bag_lasers1" {
-    exec = "rosbag play  --clock --rate 0.5 /home/mcamurri/datasets/bags/lasers1_2015-07-29-15-55-20.bag";
+    exec = "rosbag play  --clock /home/mcamurri/datasets/bags/lasers1_2015-07-29-15-55-20.bag";
     host = "localhost";
 }
 cmd "bag_lasers2" {
@@ -53,7 +53,7 @@ cmd "bag_lasers2" {
     host = "localhost";
 }
 cmd "bag_final" {
-    exec = "rosbag play  --clock /home/mcamurri/datasets/bags/final_2015-07-31-18-16-29.bag";
+    exec = "rosbag play  -u 76 --clock /home/mcamurri/datasets/bags/final_2015-07-31-18-16-29.bag"; # in the last few seconds the robot is lifted with the gantry
     host = "localhost";
 }
 cmd "bag_walk5" {
@@ -61,7 +61,7 @@ cmd "bag_walk5" {
     host = "localhost";
 }
 cmd "bag_trot3" {
-    exec = "rosbag play  --clock /home/mcamurri/datasets/bags/trot3_2015-07-10-12-33-46.bag";
+    exec = "rosbag play  --rate 0.1 --clock /home/mcamurri/datasets/bags/trot3_2015-07-10-12-33-46.bag";
     host = "localhost";
 }
 cmd "bag_trot4" {
@@ -69,7 +69,7 @@ cmd "bag_trot4" {
     host = "localhost";
 }
 cmd "bag_mfi" {
-    exec = "rosbag play  --clock /home/mcamurri/datasets/bags/mfi-2015-04-30-16-53-45.bag";
+    exec = "rosbag play --clock /home/mcamurri/datasets/bags/mfi-2015-04-30-16-53-45.bag";
     host = "localhost";
 }
 cmd "bag_lasers5" {
@@ -199,49 +199,49 @@ cmd "ethz_est_lasers7"{
 }
 group "save_data" {
 cmd "sd_lasers1"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh lasers1_evaluateall_3";
+   exec = "bash /home/mcamurri/scripts/savedata.sh evaluateall_3 lasers1";
    host = "localhost";
 }
 
 cmd "sd_lasers2"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh lasers2_evaluateall_3";
+   exec = "bash /home/mcamurri/scripts/savedata.sh evaluateall_3 lasers2";
     host = "localhost";
 }
 
 cmd "sd_final"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh final_evaluateall_3";
+   exec = "bash /home/mcamurri/scripts/savedata.sh evaluateall_3 final";
    host = "localhost";
 }
 
 cmd "sd_walk5"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh walk5_evaluateall_3";
+   exec = "bash /home/mcamurri/scripts/savedata.sh evaluateall_3 walk5";
     host = "localhost";
 }
 
 cmd "sd_trot3"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh trot3_evaluateall_3";
+   exec = "bash /home/mcamurri/scripts/savedata.sh evaluateall_3 trot3";
     host = "localhost";
 }
 
 cmd "sd_trot4"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh trot4_evaluateall_3";
+   exec = "bash /home/mcamurri/scripts/savedata.sh evaluateall_3 trot4";
    host = "localhost";
 }
 
 cmd "sd_mfi"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh mfi_evaluateall_3";
+   exec = "bash /home/mcamurri/scripts/savedata.sh evaluateall_3 mfi";
    host = "localhost";
 }
 cmd "sd_lasers5"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh lasers5_evaluateall_3";
+   exec = "bash /home/mcamurri/scripts/savedata.sh evaluateall_3 lasers5";
    host = "localhost";
 }
 cmd "sd_lasers6"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh lasers6_evaluateall_3";
+   exec = "bash /home/mcamurri/scripts/savedata.sh evaluateall_3 lasers6";
    host = "localhost";
 }
 cmd "sd_lasers7"{
-   exec = "bash /home/mcamurri/scripts/savedata.sh lasers7_evaluateall_3";
+   exec = "bash /home/mcamurri/scripts/savedata.sh evaluateall_3 lasers7";
    host = "localhost";
 }
 }

@@ -1,10 +1,14 @@
-    cmd "roscore" {
-       exec = "roscore";
-       host = "localhost";
-    }
+cmd "roscore" {
+    exec = "roscore";
+    host = "localhost";
+}
+
+cmd "pc2tool"{
+   exec = "se-pointcloud2-tool";
+   host = "localhost";
+}
 
 group "ros" {
-
     cmd "bag_setsimtime" { 
        exec = "rosparam set use_sim_time true";
        host = "localhost";
@@ -14,23 +18,140 @@ group "ros" {
        exec = "/home/mcamurri/Projects/ros2lcm/build/ros2lcm";
        host = "localhost";
     }
-
 }
 
-    cmd "ros2lcm_velodyne" {
-       exec = "/home/mcamurri/Projects/ros2lcm/build/ros2lcm_velodyne 6 1 0.03";
-       host = "localhost";
+group "ethz_estimators" {
+    cmd "ethzest"{
+        exec = "/home/mcamurri/git/software/sl-state-estimator/build/kin_estimator";
+        host = "localhost";
     }
 
+    cmd "ethz_est_lasers1"{
+       exec = "/home/mcamurri/git/software/sl-state-estimator/build/kin_estimator /home/mcamurri/git/software/sl-state-estimator/cfg/SE_ParametersSim.info /home/mcamurri/git/software/sl-state-estimator/cfg/SE_Parameters.info 0.0 250";
+        host = "localhost";
+    }
+
+    cmd "ethz_est_lasers2"{
+       exec = "/home/mcamurri/git/software/sl-state-estimator/build/kin_estimator /home/mcamurri/git/software/sl-state-estimator/cfg/SE_ParametersSim.info /home/mcamurri/git/software/sl-state-estimator/cfg/SE_Parameters.info 0.0 250";
+        host = "localhost";
+    }
+
+    cmd "ethz_est_final"{
+       exec = "/home/mcamurri/git/software/sl-state-estimator/build/kin_estimator /home/mcamurri/git/software/sl-state-estimator/cfg/SE_ParametersSim.info /home/mcamurri/git/software/sl-state-estimator/cfg/SE_Parameters.info 0.0 220";
+        host = "localhost";
+    }
+
+    cmd "ethz_est_walk5"{
+       exec = "/home/mcamurri/git/software/sl-state-estimator/build/kin_estimator /home/mcamurri/git/software/sl-state-estimator/cfg/SE_ParametersSim.info /home/mcamurri/git/software/sl-state-estimator/cfg/SE_Parameters.info 0.5301 85";
+        host = "localhost";
+    }
+
+    cmd "ethz_est_trot3"{
+       exec = "/home/mcamurri/git/software/sl-state-estimator/build/kin_estimator /home/mcamurri/git/software/sl-state-estimator/cfg/SE_ParametersSim.info /home/mcamurri/git/software/sl-state-estimator/cfg/SE_Parameters.info 0.4229 235";
+        host = "localhost";
+    }
+
+    cmd "ethz_est_trot4"{
+       exec = "/home/mcamurri/git/software/sl-state-estimator/build/kin_estimator /home/mcamurri/git/software/sl-state-estimator/cfg/SE_ParametersSim.info /home/mcamurri/git/software/sl-state-estimator/cfg/SE_Parameters.info 0.43 235";
+        host = "localhost";
+    }
+
+    cmd "ethz_est_mfi"{
+       exec = "/home/mcamurri/git/software/sl-state-estimator/build/kin_estimator /home/mcamurri/git/software/sl-state-estimator/cfg/SE_ParametersSim.info /home/mcamurri/git/software/sl-state-estimator/cfg/SE_Parameters.info 0.0 320";
+        host = "localhost";
+    }
+    cmd "ethz_est_lasers5"{
+       exec = "/home/mcamurri/git/software/sl-state-estimator/build/kin_estimator /home/mcamurri/git/software/sl-state-estimator/cfg/SE_ParametersSim.info /home/mcamurri/git/software/sl-state-estimator/cfg/SE_Parameters.info 0.0 85";
+        host = "localhost";
+    }
+    cmd "ethz_est_lasers6"{
+       exec = "/home/mcamurri/git/software/sl-state-estimator/build/kin_estimator /home/mcamurri/git/software/sl-state-estimator/cfg/SE_ParametersSim.info /home/mcamurri/git/software/sl-state-estimator/cfg/SE_Parameters.info 0.0 85";
+        host = "localhost";
+    }
+    cmd "ethz_est_lasers7"{
+       exec = "/home/mcamurri/git/software/sl-state-estimator/build/kin_estimator /home/mcamurri/git/software/sl-state-estimator/cfg/SE_ParametersSim.info /home/mcamurri/git/software/sl-state-estimator/cfg/SE_Parameters.info 0.0 85";
+        host = "localhost";
+    }
+}
 
 
-cmd "bag_lasers6" {
-   exec = "rosbag play --clock /home/mcamurri/datasets/bags/lasers6_2015-08-14-11-50-05.bag";
+cmd "ros2lcm_mcamurri_wbody" {
+   exec = "/home/mcamurri/Projects/ros2lcm/build/ros2lcm -b";
    host = "localhost";
 }
-cmd "bag_final" {
-   exec = "rosbag play --clock /home/mcamurri/datasets/bags/final_2015-07-31-18-16-29.bag";
-   host = "localhost";
+
+group "ros2lcm_velodynes"{
+    cmd "ros2lcm_velodyne_pointcloud" {
+       exec = "/home/mcamurri/Projects/ros2lcm/build/ros2lcm_velodyne 72 0.02 false";
+       host = "localhost";
+    }
+    cmd "ros2lcm_velodyne_raw" {
+       exec = "/home/mcamurri/Projects/ros2lcm/build/ros2lcm_velodyne 72 0.02 true";
+       host = "localhost";
+    }
+}
+
+cmd "signal-scope" {
+    exec = "signal-scope";
+    host = "localhost";
+}
+
+group "bags" {
+    cmd "bag_lasers6" {
+       exec = "rosbag play -u 83 --clock /home/mcamurri/datasets/bags/lasers6_2015-08-14-11-50-05.bag";
+       host = "localhost";
+    }
+    cmd "bag_final" {
+       exec = "rosbag play --clock /home/mcamurri/datasets/bags/final_2015-07-31-18-16-29.bag";
+       host = "localhost";
+    }
+    cmd "bag_lasers1" {
+       exec = "rosbag play --clock /home/mcamurri/datasets/bags/lasers1_2015-07-29-15-55-20.bag";
+       host = "localhost";
+    }
+    cmd "bag_lasers2" {
+       exec = "rosbag play --clock /home/mcamurri/datasets/bags/lasers2_2015-07-29-15-58-33.bag";
+       host = "localhost";
+    }
+    cmd "bag_lasers5" {
+       exec = "rosbag play --clock /home/mcamurri/datasets/bags/lasers5_2015-08-14-11-43-23.bag";
+       host = "localhost";
+    }
+    cmd "bag_lasers6" {
+       exec = "rosbag play --clock /home/mcamurri/datasets/bags/lasers6_2015-08-14-11-50-05.bag";
+       host = "localhost";
+    }
+    cmd "bag_lasers7" {
+       exec = "rosbag play --clock /home/mcamurri/datasets/bags/lasers7_2015-08-14-11-56-52.bag";
+       host = "localhost";
+    }
+}
+
+group "logs" {
+    cmd "log_lasers1" {
+       exec = "lcm-logplayer-gui -p /home/mcamurri/datasets/lcm/lasers1_2015-07-29-15-55-20.lcmlog";
+       host = "localhost";
+    }
+    cmd "log_lasers2" {
+       exec = "lcm-logplayer-gui -p /home/mcamurri/datasets/lcm/lasers2_2015-08-14-11-50-05.lcmlog";
+       host = "localhost";
+    }
+    cmd "log_final" {
+       exec = "lcm-logplayer-gui -p /home/mcamurri/datasets/lcm/final_2015-08-14-11-50-05.lcmlog";
+       host = "localhost";
+    }
+    cmd "log_lasers5" {
+       exec = "lcm-logplayer-gui -p /home/mcamurri/datasets/lcm/lasers5_2015-08-14-11-50-05.lcmlog";
+       host = "localhost";
+    }
+    cmd "log_lasers6" {
+       exec = "lcm-logplayer-gui -p /home/mcamurri/datasets/lcm/lasers6_2015-08-14-11-50-05.lcmlog";
+       host = "localhost";
+    }
+    cmd "log_lasers7" {
+       exec = "lcm-logplayer-gui -p /home/mcamurri/datasets/lcm/lasers7_2015-08-14-11-50-05.lcmlog";
+       host = "localhost";
+    }
 }
 
 cmd "bot-spy" {
@@ -68,23 +189,110 @@ cmd "gpf_laser" {
    host = "localhost";
 }
 
-script "00.gpf_lasers6" {
+cmd "octomap-server" {
+   exec = "octomap-server -r 1 /home/mcamurri/git/software/pronto-distro/build/data/octomap.bt";
+   host = "localhost";
+}
+
+
+cmd "create-octomap" {
+  exec = "se-create-octomap -l VELODYNE -a -s 100 -b 0.2 -R 0.05";
+  host = "localhost";
+}
+
+script "09.gpf_lasers6" {
+   start cmd "ethz_est_lasers6";
+   start cmd "robot_model_pub";
+   start cmd "bot-spy";
+   start cmd "bot_param_server";
+   start cmd "pronto_viewer";
+   start cmd "se_fusion";
+   start cmd "se_state_sync";
+   start cmd "octomap-server";
+   start cmd "gpf_laser";
+   start cmd "signal-scope";
+   start cmd "log_lasers6";
+}
+script "00.gpf_lasers1" {
+   start cmd "ethz_est_lasers1";
+   start cmd "robot_model_pub";
+   start cmd "bot-spy";
+   start cmd "bot_param_server";
+   start cmd "pronto_viewer";
+   start cmd "se_fusion";
+   start cmd "se_state_sync";
+   start cmd "octomap-server";
+   start cmd "gpf_laser";
+   start cmd "signal-scope";
+   start cmd "log_lasers1";
+}
+
+script "99.gpf_lasers_bag" {
    start cmd "roscore";
    wait ms 5000;   
    start group "ros";
    start cmd "ros2lcm_velodyne";
+   start cmd "ethz_est_lasers6";
+   start cmd "robot_model_pub";
    start cmd "bot-spy";
    start cmd "bot_param_server";
+   start cmd "pronto_viewer";
+   start cmd "se_fusion";
+   start cmd "se_state_sync";
+   start cmd "octomap-server";
+   start cmd "gpf_laser";
+   start cmd "signal-scope";
    wait ms 2000;
    start cmd "bag_lasers6";
 }
-script "01.gpf_final" {
+
+cmd "lcm-logger" {
+  exec = "lcm-logger";
+  host = "localhost";
+}
+
+
+script "98.gpf_lasers6_record" {
    start cmd "roscore";
    wait ms 5000;   
    start group "ros";
+   start cmd "ros2lcm_velodyne_pointcloud";
+   start cmd "ethz_est_lasers1";
+   start cmd "robot_model_pub";
+   start cmd "bot_param_server";
+   start cmd "se_state_sync";
+   wait ms 2000;
+   start cmd "bag_lasers1";
+   start cmd "lcm-logger";
+}
+
+script "97.gpf_octomap" {
+   start cmd "bot_param_server";
+   start cmd "roscore";
+   wait ms 5000;
+   start cmd "bag_setsimtime";
+   start cmd "ros2lcm_mcamurri_wbody";
+   start cmd "ros2lcm_velodyne_pointcloud";
+   start cmd "create-octomap";
+   start cmd "bot-spy";
+   wait ms 2000;
+   start cmd "bag_lasers1";
+}
+
+
+script "03.gpf_final" {
+   start cmd "roscore";
+   wait ms 5000;  
    start cmd "ros2lcm_velodyne";
+   start cmd "robot_model_pub";
    start cmd "bot-spy";
    start cmd "bot_param_server";
+   start cmd "pronto_viewer";
+   start cmd "se_fusion";
+   start cmd "se_state_sync";
+   start cmd "gpf_laser";
    wait ms 2000;
+
    start cmd "bag_final";
 }
+

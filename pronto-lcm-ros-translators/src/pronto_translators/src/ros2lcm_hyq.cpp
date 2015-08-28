@@ -42,20 +42,21 @@ using namespace std;
 
 class App{
 public:
-  App(ros::NodeHandle node_, bool send_ground_truth_);
+  App(ros::NodeHandle node_, bool send_ground_truth_, bool send_pose_body);
   ~App();
 
 private:
   bool send_ground_truth_; // publish control msgs to LCM
+  bool send_pose_body_;
   lcm::LCM lcmPublish_ ;
   ros::NodeHandle node_;
-  
+
   // Atlas Joints and FT sensor
-  ros::Subscriber  joint_states_sub_;  
-  void joint_states_cb(const sensor_msgs::JointStateConstPtr& msg);  
+  ros::Subscriber  joint_states_sub_;
+  void joint_states_cb(const sensor_msgs::JointStateConstPtr& msg);
   std::vector<double> ptu_position_,ptu_velocity_,ptu_effort_;
   std::vector<std::string> ptu_name_;
-  
+
   // The position and orientation from BDI's own estimator:
   ros::Subscriber pose_bdi_sub_;
   void pose_bdi_cb(const nav_msgs::OdometryConstPtr& msg);
@@ -76,8 +77,8 @@ private:
     mav::ins_t imu;
 };
 
-App::App(ros::NodeHandle node_, bool send_ground_truth_) :
-    send_ground_truth_(send_ground_truth_), node_(node_){
+App::App(ros::NodeHandle node_, bool send_ground_truth, bool send_pose_body) :
+    send_ground_truth_(send_ground_truth), node_(node_), send_pose_body_(send_pose_body){
   ROS_INFO("Initializing Translator");
   if(!lcmPublish_.good()){
     std::cerr <<"ERROR: lcm is not good()" <<std::endl;
@@ -132,7 +133,7 @@ void App::joint_states_cb(const sensor_msgs::JointStateConstPtr& msg){
 
 
   pronto::joint_state_t msg_out;
-  msg_out.utime = (int64_t) msg->header.stamp.toNSec()/1000; // from nsec to usec  
+  msg_out.utime = (int64_t) msg->header.stamp.toNSec()/1000; // from nsec to usec
   msg_out.joint_position.assign(n_joints , std::numeric_limits<int>::min()  );
   msg_out.joint_velocity.assign(n_joints , std::numeric_limits<int>::min()  );
   msg_out.joint_effort.assign(n_joints , std::numeric_limits<int>::min()  );
@@ -152,9 +153,9 @@ void App::joint_states_cb(const sensor_msgs::JointStateConstPtr& msg){
   lcmPublish_.publish("HYQ_STATE", &msg_out);
 
 
-  if (1==0){ 
+  if (1==0){
   pronto::robot_state_t msg_out;
-  msg_out.utime = (int64_t) msg->header.stamp.toNSec()/1000; // from nsec to usec  
+  msg_out.utime = (int64_t) msg->header.stamp.toNSec()/1000; // from nsec to usec
   msg_out.joint_position.assign(n_joints , std::numeric_limits<int>::min()  );
   msg_out.joint_velocity.assign(n_joints , std::numeric_limits<int>::min()  );
   msg_out.joint_effort.assign(n_joints , std::numeric_limits<int>::min()  );
@@ -182,7 +183,7 @@ int gt_counter =0;
 void App::pose_bdi_cb(const nav_msgs::OdometryConstPtr& msg){
   if (gt_counter%1000 ==0){
     ROS_ERROR("BDI  [%d]", gt_counter );
-  }  
+  }
   gt_counter++;
 
   bot_core::pose_t pose_msg;
@@ -219,13 +220,13 @@ void App::pose_bdi_cb(const nav_msgs::OdometryConstPtr& msg){
 //  pose_msg.rotation_rate[0] = imu_msg_.angular_velocity.x;
 //  pose_msg.rotation_rate[1] = imu_msg_.angular_velocity.y;
 //  pose_msg.rotation_rate[2] = imu_msg_.angular_velocity.z;
-  
+
   // Frame?
   //pose_msg.accel[0] = imu_msg_.linear_acceleration.x;
   //pose_msg.accel[1] = imu_msg_.linear_acceleration.y;
   //pose_msg.accel[2] = imu_msg_.linear_acceleration.z;
 
-  lcmPublish_.publish("POSE_BDI", &pose_msg);   
+  lcmPublish_.publish("POSE_BDI", &pose_msg);
   // lcmPublish_.publish("POSE_BODY", &pose_msg);    // for now
 }
 
@@ -281,8 +282,9 @@ void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg){
   pose_msg3.rotation_rate[1] = 0;
   pose_msg3.rotation_rate[2] = 0;
 
-
-  //lcmPublish_.publish("POSE_BODY", &pose_msg3);
+  if(send_pose_body_){
+     lcmPublish_.publish("POSE_BODY", &pose_msg3);
+  }
   lcmPublish_.publish("POSE_VICON", &pose_msg3);
 
   bot_core::rigid_transform_t pose_msg4;
@@ -329,7 +331,7 @@ void App::laserScanCallback(const sensor_msgs::LaserScanConstPtr& msg){
   if (scan_counter%80 ==0){
     ROS_ERROR("LSCAN [%d]", scan_counter );
     //std::cout << "SCAN " << scan_counter << "\n";
-  }  
+  }
   scan_counter++;
   publishLidar(msg, "SCAN");
 }
@@ -359,11 +361,23 @@ void App::publishLidar(const sensor_msgs::LaserScanConstPtr& msg,string channel 
 
 
 int main(int argc, char **argv){
-  bool send_ground_truth = false;  
+  bool send_ground_truth = false;
+  bool send_pose_body = false;
+  if(argc >= 2){
+      if(strncmp(argv[1],"-b",2) == 0){
+          send_pose_body = true;
+      }
+  }
+
+  if(send_pose_body){
+             std::cout << "Sending pose body in translation" << std::endl;
+  } else {
+             std::cout << "Not sending pose body in translation" << std::endl;
+  }
 
   ros::init(argc, argv, "ros2lcm");
   ros::NodeHandle nh;
-  new App(nh, send_ground_truth);
+  new App(nh, send_ground_truth,send_pose_body);
   std::cout << "ros2lcm translator ready\n";
   ROS_ERROR("ROS2LCM Translator Ready");
   ros::spin();
