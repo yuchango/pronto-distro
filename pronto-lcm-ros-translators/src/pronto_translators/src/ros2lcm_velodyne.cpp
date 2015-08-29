@@ -75,8 +75,11 @@ App::App(ros::NodeHandle node_,
     data_(new velodyne_rawdata::RawData()) {
 
     if(use_raw_data) {
-        private_node_.setParam("calibration",
-                               "/opt/ros/indigo/share/velodyne_pointcloud/params/32db.yaml");
+        std::stringstream ss;
+        ss << std::getenv("PRONTO_ROOT") << "/pronto-lcm-ros-translators/"
+           "src/pronto_translators/src/32db.yaml";
+
+        private_node_.setParam("calibration", ss.str());
         data_->setup(private_node_);
 
         // we want everything
