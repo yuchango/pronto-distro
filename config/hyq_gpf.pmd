@@ -230,7 +230,7 @@ script "08.gpf_lasers5" {
 }
 
 script "09.gpf_lasers6" {
-   start cmd "transfer-laser6";
+   start cmd "transfer-lasers6";
    start cmd "kin_est_lasers6";
    start cmd "robot_model_pub";
    start cmd "bot-spy";

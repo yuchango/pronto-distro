@@ -49,7 +49,7 @@ cmd "bag_lasers1" {
     host = "localhost";
 }
 cmd "bag_lasers2" {
-    exec = "rosbag play  --clock /home/mcamurri/datasets/bags/lasers2_2015-07-29-15-58-33.bag";
+    exec = "rosbag play  --clock /home/mcamurri/ownCloud/DataSets/bag_lasers2_2015-07-29-15-58-33.bag";
     host = "localhost";
 }
 cmd "bag_final" {
@@ -113,7 +113,7 @@ cmd "log_trot_mfallon" {
 }
 }
 cmd "ros_hyq_slam" {
-    exec = "echo ciao";
+    exec = "roslaunch hyq_slam bag_icp_xtion2.launch";
     host = "localhost";
 }
 
@@ -155,7 +155,7 @@ cmd "ethz_est_lasers1"{
 }
 
 cmd "ethz_est_lasers2"{
-   exec = "/home/mcamurri/git/software/sl-state-estimator/build/kin_estimator /home/mcamurri/git/software/sl-state-estimator/cfg/SE_ParametersSim.info /home/mcamurri/git/software/sl-state-estimator/cfg/SE_Parameters.info 0.0 250";
+   exec = "/home/mcamurri/git/software/sl-state-estimator/build/vis_estimator /home/mcamurri/git/software/sl-state-estimator/cfg/SE_ParametersSim.info /home/mcamurri/git/software/sl-state-estimator/cfg/SE_Parameters.info 0.0 250";
     host = "localhost";
 }
 
@@ -282,8 +282,8 @@ script "02.state_est_lasers2" {
    wait ms 2000;
    start cmd "bag_setsimtime";
    start cmd "ros2lcm_mcamurri";
-   start cmd "ros_hyq_slam";
-   start cmd "viewer";
+   #start cmd "ros_hyq_slam";
+   #start cmd "viewer";
    start cmd "bot-spy";
    start cmd "signal-scope";
    start cmd "ethz_est_lasers2";
