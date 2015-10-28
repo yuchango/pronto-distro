@@ -28,8 +28,8 @@
 
 class App {
 public:
-    App(ros::NodeHandle node_,
-        ros::NodeHandle private_node_,
+    App(ros::NodeHandle& node_,
+        ros::NodeHandle& private_node_,
         int modulo,
         float distance, bool use_raw_data);
     ~App();
@@ -61,8 +61,8 @@ private:
 
 };
 
-App::App(ros::NodeHandle node_,
-         ros::NodeHandle private_node_,
+App::App(ros::NodeHandle &node_,
+         ros::NodeHandle &private_node_,
          int modulo,
          float distance,
          bool use_raw_data) :
@@ -265,7 +265,7 @@ int main(int argc, char **argv) {
     std::cout << "[ ROS2LCM Velodyne ] max distance: " << distance << std::endl;
     std::cout << "[ ROS2LCM Velodyne ] use raw data: " << (use_raw_data ? "true" : "false") << std::endl;
     new App(nh, priv_nh, modulo, distance, use_raw_data);
-    ROS_ERROR("ROS2LCM Velodyne Translator Ready");
+    ROS_INFO("ROS2LCM Velodyne Translator Ready");
 
     ros::spin();
     return 0;
