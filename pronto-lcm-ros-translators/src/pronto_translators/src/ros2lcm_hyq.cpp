@@ -33,6 +33,8 @@
 #include "lcmtypes/pronto/atlas_raw_imu_batch_t.hpp"
 #include "lcmtypes/mav/ins_t.hpp"
 
+#include "ViconDerivator.hpp"
+
 #define MAX_LIDAR_RANGE 60.0
 
 
@@ -48,6 +50,7 @@ public:
     ~App();
 
 private:
+    Eigen::Affine3d bTf; // Transform between viconplate-to-body
     bool first_vicon_transform;
     bool send_ground_truth_; // publish control msgs to LCM
     bool send_pose_body_;
@@ -75,6 +78,7 @@ private:
     bool verbose_;
     mav::ins_t imu;
     tf::TransformListener listener_;
+    ViconDerivator* vd_;
 };
 
 App::App(ros::NodeHandle& node,
@@ -84,7 +88,9 @@ App::App(ros::NodeHandle& node,
     send_ground_truth_(send_ground_truth),
     node_(node),
     send_pose_body_(send_pose_body),
-    first_vicon_transform(true) {
+    first_vicon_transform(true),
+    bTf(Eigen::Affine3d::Identity()),
+    vd_(new ViconDerivator(5)) {
 
     ROS_INFO("Initializing Translator");
     if(!lcmPublish_.good()) {
@@ -118,6 +124,7 @@ App::App(ros::NodeHandle& node,
 }
 
 App::~App()  {
+    delete vd_;
 }
 
 
@@ -161,11 +168,23 @@ void App::joint_states_cb(const sensor_msgs::JointStateConstPtr& msg) {
 
 
 void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg) {
-    Eigen::Affine3d bTf;
+    Eigen::Vector3d pos;
+    Eigen::Vector3d vicon_vel;
+    Eigen::Affine3d a;
+    a.setIdentity();
+    a.translation() << msg->transform.translation.x,
+                  msg->transform.translation.y,
+                  msg->transform.translation.z;
+
+    Eigen::Quaterniond a_q(msg->transform.rotation.w,
+                           msg->transform.rotation.x,
+                           msg->transform.rotation.y,
+                           msg->transform.rotation.z);
+    a.rotate(a_q);
+
+    Eigen::Affine3d c = a * bTf;
 
     if(first_vicon_transform) {
-
-
         tf::StampedTransform transform;
         try {
             listener_.waitForTransform(vicon_frame,
@@ -181,85 +200,72 @@ void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg) {
             tf::transformTFToEigen(transform, bTf);
             ROS_INFO("First Vicon-to-base transform captured:");
             std::cout << bTf.matrix() << std::endl;
-            ofstream fs;
-            fs.open("/home/mcamurri/vicon_matrix.txt");
-            fs << bTf.matrix();
-            fs.close();
             first_vicon_transform = false;
+            pos << c.translation().x(), c.translation().y(), c.translation().z();
+            vd_->updateMA(msg->header.stamp.toSec(), pos, vicon_vel);
+            return;
 
         } catch (tf::TransformException ex) {
             std::cerr << "ERROR: vicon transform not received!" << std::endl;
             std::cerr << ex.what() << std::endl;
             return;
         }
+    } else {
+
+        bot_core::rigid_transform_t pose_msg;
+        pose_msg.utime = (int64_t) floor(msg->header.stamp.toNSec() / 1000);
+        pose_msg.trans[0] = msg->transform.translation.x;
+        pose_msg.trans[1] = msg->transform.translation.y;
+        pose_msg.trans[2] = msg->transform.translation.z;
+        pose_msg.quat[0] =  msg->transform.rotation.w;
+        pose_msg.quat[1] =  msg->transform.rotation.x;
+        pose_msg.quat[2] =  msg->transform.rotation.y;
+        pose_msg.quat[3] =  msg->transform.rotation.z;
+        lcmPublish_.publish("VICONSYSTEM_TO_LOCAL", &pose_msg);
+
+        bot_core::pose_t pose_msg3;
+
+        /* getting the estimated velocity */
+        pos << c.translation().x(), c.translation().y(), c.translation().z();
+        vd_->updateMA(msg->header.stamp.toSec(), pos, vicon_vel);
+
+        pose_msg3.utime = (int64_t) floor(msg->header.stamp.toNSec() / 1000);
+        pose_msg3.pos[0] = c.translation().x();
+        pose_msg3.pos[1] = c.translation().y();
+        pose_msg3.pos[2] = c.translation().z();
+        pose_msg3.vel[0] = vicon_vel(0);
+        pose_msg3.vel[1] = vicon_vel(1);
+        pose_msg3.vel[2] = vicon_vel(2);
+        pose_msg3.accel[0] = 0;
+        pose_msg3.accel[1] = 0;
+        pose_msg3.accel[2] = 0;
+
+        Eigen::Quaterniond c_q = Eigen::Quaterniond(c.rotation());
+        pose_msg3.orientation[0] =  c_q.w();
+        pose_msg3.orientation[1] =  c_q.x();
+        pose_msg3.orientation[2] =  c_q.y();
+        pose_msg3.orientation[3] =  c_q.z();
+
+        pose_msg3.rotation_rate[0] = 0;
+        pose_msg3.rotation_rate[1] = 0;
+        pose_msg3.rotation_rate[2] = 0;
+
+        if(send_pose_body_) {
+            lcmPublish_.publish("POSE_BODY", &pose_msg3);
+        }
+        lcmPublish_.publish("POSE_VICON", &pose_msg3);
+
+        bot_core::rigid_transform_t pose_msg4;
+        pose_msg4.utime = (int64_t) floor(msg->header.stamp.toNSec() / 1000);
+        pose_msg4.trans[0] = c.translation().x();
+        pose_msg4.trans[1] = c.translation().y();
+        pose_msg4.trans[2] = c.translation().z();
+        pose_msg4.quat[0] =  c_q.w();
+        pose_msg4.quat[1] =  c_q.x();
+        pose_msg4.quat[2] =  c_q.y();
+        pose_msg4.quat[3] =  c_q.z();
+        lcmPublish_.publish("VICON_TO_LOCAL", &pose_msg4);
     }
-
-
-    // bTf << 0.00000,   0.00000,   1.00000,  -0.26100,
-    //        0.00000,  -1.00000,   0.00000,   0.19100,
-    //        1.00000,   0.00000,   0.00000,  -0.44300,
-    //        0.00000,   0.00000,   0.00000,   1.00000;
-
-    // This is the new setup for the Vicon markers on HyQ Green
-
-
-    Eigen::Affine3d a;
-    a.setIdentity();
-    a.translation() << msg->transform.translation.x, msg->transform.translation.y, msg->transform.translation.z;
-    Eigen::Quaterniond a_q(msg->transform.rotation.w, msg->transform.rotation.x, msg->transform.rotation.y, msg->transform.rotation.z);
-    a.rotate(a_q);
-
-    Eigen::Affine3d c = a * bTf;
-
-    bot_core::rigid_transform_t pose_msg;
-    pose_msg.utime = (int64_t) floor(msg->header.stamp.toNSec() / 1000);
-    pose_msg.trans[0] = msg->transform.translation.x;
-    pose_msg.trans[1] = msg->transform.translation.y;
-    pose_msg.trans[2] = msg->transform.translation.z;
-    pose_msg.quat[0] =  msg->transform.rotation.w;
-    pose_msg.quat[1] =  msg->transform.rotation.x;
-    pose_msg.quat[2] =  msg->transform.rotation.y;
-    pose_msg.quat[3] =  msg->transform.rotation.z;
-    lcmPublish_.publish("VICONSYSTEM_TO_LOCAL", &pose_msg);
-
-
-    bot_core::pose_t pose_msg3;
-    pose_msg3.utime = (int64_t) floor(msg->header.stamp.toNSec() / 1000);
-    pose_msg3.pos[0] = c.translation().x();
-    pose_msg3.pos[1] = c.translation().y();
-    pose_msg3.pos[2] = c.translation().z();
-    pose_msg3.vel[0] = 0;
-    pose_msg3.vel[1] = 0;
-    pose_msg3.vel[2] = 0;
-    pose_msg3.accel[0] = 0;
-    pose_msg3.accel[1] = 0;
-    pose_msg3.accel[2] = 0;
-
-    Eigen::Quaterniond c_q = Eigen::Quaterniond(c.rotation());
-    pose_msg3.orientation[0] =  c_q.w();
-    pose_msg3.orientation[1] =  c_q.x();
-    pose_msg3.orientation[2] =  c_q.y();
-    pose_msg3.orientation[3] =  c_q.z();
-
-    pose_msg3.rotation_rate[0] = 0;
-    pose_msg3.rotation_rate[1] = 0;
-    pose_msg3.rotation_rate[2] = 0;
-
-    if(send_pose_body_) {
-        lcmPublish_.publish("POSE_BODY", &pose_msg3);
-    }
-    lcmPublish_.publish("POSE_VICON", &pose_msg3);
-
-    bot_core::rigid_transform_t pose_msg4;
-    pose_msg4.utime = (int64_t) floor(msg->header.stamp.toNSec() / 1000);
-    pose_msg4.trans[0] = c.translation().x();
-    pose_msg4.trans[1] = c.translation().y();
-    pose_msg4.trans[2] = c.translation().z();
-    pose_msg4.quat[0] =  c_q.w();
-    pose_msg4.quat[1] =  c_q.x();
-    pose_msg4.quat[2] =  c_q.y();
-    pose_msg4.quat[3] =  c_q.z();
-    lcmPublish_.publish("VICON_TO_LOCAL", &pose_msg4);
 }
 
 
