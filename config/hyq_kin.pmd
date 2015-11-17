@@ -1,0 +1,289 @@
+cmd "kin_estimator"{
+    exec = "$KSE_ROOT/build/kin_estimator";
+    host = "localhost";
+}
+
+cmd "signal-scope" {
+    exec = "signal-scope";
+    host = "localhost";
+}
+
+group "logs" {
+    cmd "log_walk2" {
+       exec = "lcm-logplayer-gui -p $DATA_ROOT/logs/walk_02_2015-10-06-17-21-08.lcmlog";
+       host = "localhost";
+    }
+    cmd "log_lasers1" {
+       exec = "lcm-logplayer-gui -p $DATA_ROOT/logs/lasers1_2015-07-29-15-55-20.lcmlog";
+       host = "localhost";
+    }
+    cmd "log_lasers2" {
+       exec = "lcm-logplayer-gui -p $DATA_ROOT/logs/lasers2_2015-07-29-15-58-33.lcmlog";
+       host = "localhost";
+    }
+    cmd "log_final" {
+       exec = "lcm-logplayer-gui -p $DATA_ROOT/logs/final_2015-07-31-18-16-29.lcmlog";
+       host = "localhost";
+    }
+    cmd "log_lasers5" {
+       exec = "lcm-logplayer-gui -p $DATA_ROOT/logs/lasers5_2015-08-14-11-43-23.lcmlog";
+       host = "localhost";
+    }
+    cmd "log_lasers6" {
+       exec = "lcm-logplayer-gui -p  $DATA_ROOT/logs/lasers6_2015-08-14-11-50-05.lcmlog";
+       host = "localhost";
+    }
+    cmd "log_lasers7" {
+       exec = "lcm-logplayer-gui -p  $DATA_ROOT/logs/lasers7_2015-08-14-11-56-52.lcmlog";
+       host = "localhost";
+    }
+}
+group "logs_auto" {
+    cmd "log_walk2a" {
+       exec = "lcm-logplayer-gui $DATA_ROOT/logs/walk_02_2015-10-06-17-21-08.lcmlog";
+       host = "localhost";
+    }
+    cmd "log_lasers1a" {
+       exec = "lcm-logplayer-gui  $DATA_ROOT/logs/lasers1_2015-07-29-15-55-20.lcmlog";
+       host = "localhost";
+    }
+    cmd "log_lasers2a" {
+       exec = "lcm-logplayer-gui  $DATA_ROOT/logs/lasers2_2015-07-29-15-58-33.lcmlog";
+       host = "localhost";
+    }
+    cmd "log_finala" {
+       exec = "lcm-logplayer-gui  $DATA_ROOT/logs/final_2015-07-31-18-16-29.lcmlog";
+       host = "localhost";
+    }
+    cmd "log_lasers5a" {
+       exec = "lcm-logplayer-gui  $DATA_ROOT/logs/lasers5_2015-08-14-11-43-23.lcmlog";
+       host = "localhost";
+    }
+    cmd "log_lasers6a" {
+       exec = "lcm-logplayer-gui  $DATA_ROOT/logs/lasers6_2015-08-14-11-50-05.lcmlog";
+       host = "localhost";
+    }
+    cmd "log_lasers7a" {
+       exec = "lcm-logplayer-gui  $DATA_ROOT/logs/lasers7_2015-08-14-11-56-52.lcmlog";
+       host = "localhost";
+    }
+}
+
+group "save_data" {
+    cmd "sd_lasers1"{
+       exec = "bash $DATA_ROOT/scripts/savedata.sh evaluate lasers1";
+       host = "localhost";
+    }
+    cmd "sd_lasers2"{
+       exec = "bash $DATA_ROOT/scripts/savedata.sh evaluate lasers2";
+        host = "localhost";
+    }
+    cmd "sd_final"{
+       exec = "bash $DATA_ROOT/scripts/savedata.sh evaluate final";
+       host = "localhost";
+    }
+    cmd "sd_lasers5"{
+       exec = "bash $DATA_ROOT/scripts/savedata.sh evaluate lasers5";
+       host = "localhost";
+    }
+    cmd "sd_lasers6"{
+       exec = "bash $DATA_ROOT/scripts/savedata.sh evaluate lasers6";
+       host = "localhost";
+    }
+    cmd "sd_lasers7"{
+       exec = "bash $DATA_ROOT/scripts/savedata.sh evaluate lasers7";
+       host = "localhost";
+    }
+    cmd "sd_walk2" {
+       exec = "bash $DATA_ROOT/scripts/savedata.sh evaluate walk2";
+       host = "localhost";
+    }
+}
+
+cmd "bot-spy" {
+    exec = "bot-spy";
+    host = "localhost";
+}
+
+cmd "robot_model_pub" {
+    exec = "robot_model_publisher $PRONTO_ROOT/models/mit_gazebo_models/hyq_description/robots/hyq.urdf";
+    host = "localhost";
+}
+
+cmd "bot_param_server" {
+    exec = "bot-param-server hyq_kin.cfg";
+    host = "localhost";
+}
+
+cmd "pronto_viewer" {
+   exec = "pronto-viewer -c hyq_kin.cfg";
+   host = "localhost";
+}
+
+cmd "se_fusion" {
+   exec = "se-fusion -P hyq_kin.cfg";
+   host = "localhost";
+}
+
+cmd "se_state_sync" { 
+   exec = "se-state-sync-simple";
+   host = "localhost";
+}
+
+script "10.test_lasers1" {
+   start cmd "kin_estimator";
+   start cmd "robot_model_pub";
+   start cmd "bot-spy";
+   start cmd "bot_param_server";
+   start cmd "pronto_viewer";
+   start cmd "se_fusion";
+   start cmd "se_state_sync";
+   start cmd "signal-scope";
+   start cmd "log_lasers1";
+}
+script "11.test_lasers2" {
+   start cmd "kin_estimator";
+   start cmd "robot_model_pub";
+   start cmd "bot-spy";
+   start cmd "bot_param_server";
+   start cmd "pronto_viewer";
+   start cmd "se_fusion";
+   start cmd "se_state_sync";
+   start cmd "signal-scope";
+   start cmd "log_lasers2";
+}
+script "12.test_final" {
+   start cmd "kin_estimator";
+   start cmd "robot_model_pub";
+   start cmd "bot-spy";
+   start cmd "bot_param_server";
+   start cmd "pronto_viewer";
+   start cmd "se_fusion";
+   start cmd "se_state_sync";
+   start cmd "signal-scope";
+   start cmd "log_final";
+}
+script "13.test_lasers5" {
+   start cmd "kin_estimator";
+   start cmd "robot_model_pub";
+   start cmd "bot-spy";
+   start cmd "bot_param_server";
+   start cmd "pronto_viewer";
+   start cmd "se_fusion";
+   start cmd "se_state_sync";
+   start cmd "signal-scope";
+   start cmd "log_lasers5";
+}
+script "14.test_lasers6" {
+   start cmd "kin_estimator";
+   start cmd "robot_model_pub";
+   start cmd "bot-spy";
+   start cmd "bot_param_server";
+   start cmd "pronto_viewer";
+   start cmd "se_fusion";
+   start cmd "se_state_sync";
+   start cmd "signal-scope";
+   start cmd "log_lasers6";
+}
+script "15.test_lasers7" {
+   start cmd "kin_estimator";
+   start cmd "robot_model_pub";
+   start cmd "bot-spy";
+   start cmd "bot_param_server";
+   start cmd "pronto_viewer";
+   start cmd "se_fusion";
+   start cmd "se_state_sync";
+   start cmd "signal-scope";
+   start cmd "log_lasers7";
+}
+script "16.test_walk2" {
+   start cmd "kin_estimator";
+   start cmd "robot_model_pub";
+   start cmd "bot-spy";
+   start cmd "bot_param_server";
+   start cmd "pronto_viewer";
+   start cmd "se_fusion";
+   start cmd "se_state_sync";
+   start cmd "signal-scope";
+   start cmd "log_walk2";
+}
+
+
+script "90.test_kinematics" {
+   start cmd "kin_estimator";
+   start cmd "robot_model_pub";
+   start cmd "bot_param_server";
+   start cmd "se_fusion";
+   start cmd "se_state_sync";
+   start cmd "log_lasers1a";
+   wait ms 92000;
+   start cmd "sd_lasers1";
+   stop cmd "log_lasers1a";
+   stop cmd "kin_estimator";
+   stop cmd "se_fusion";
+   
+   wait ms 1000;
+   start cmd "kin_estimator";
+   start cmd "se_fusion";
+   start cmd "log_lasers2a";
+   wait ms 82000;
+   start cmd "sd_lasers2";
+   stop cmd "log_lasers2a";
+   stop cmd "kin_estimator";
+   stop cmd "se_fusion";
+   
+   wait ms 1000;
+   start cmd "kin_estimator";
+   start cmd "se_fusion";
+   start cmd "log_finala";
+   # the file is longer but at time 76
+   # the robot is shut down and lifted by
+   # the gantry 
+   wait ms 76000;   
+   start cmd "sd_final";
+   stop cmd "log_finala";
+   stop cmd "kin_estimator";
+   stop cmd "se_fusion";
+   
+   wait ms 1000;
+   start cmd "kin_estimator";
+   start cmd "se_fusion";
+   start cmd "log_lasers5a";
+   wait ms 39000; # the robot is lifted at 39
+   #wait ms 42000;
+   start cmd "sd_lasers5";
+   stop cmd "log_lasers5a";
+   stop cmd "kin_estimator";
+   stop cmd "se_fusion";
+   
+   wait ms 1000;
+   start cmd "kin_estimator";
+   start cmd "se_fusion";
+   start cmd "log_lasers6a";
+   wait ms 84000;
+   start cmd "sd_lasers6";
+   stop cmd "log_lasers6a";
+   stop cmd "kin_estimator";
+   stop cmd "se_fusion";
+   
+   wait ms 1000;
+   start cmd "kin_estimator";
+   start cmd "se_fusion";
+   start cmd "log_lasers7a";
+   wait ms 90000;
+   start cmd "sd_lasers7";
+   stop cmd "log_lasers7a";
+   stop cmd "kin_estimator";
+   stop cmd "se_fusion";
+   
+   wait ms 1000;
+   start cmd "kin_estimator";
+   start cmd "se_fusion";
+   start cmd "log_walk2a";
+   wait ms 90000;
+   start cmd "sd_walk2";
+   stop cmd "log_walk2a";
+   stop cmd "kin_estimator";
+   stop cmd "se_fusion";
+}
+
