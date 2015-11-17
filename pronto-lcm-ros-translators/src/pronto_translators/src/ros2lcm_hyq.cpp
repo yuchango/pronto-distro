@@ -19,6 +19,7 @@
 #include <geometry_msgs/Wrench.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <nav_msgs/Odometry.h>
 
 #include <tf/transform_listener.h>
 #include <tf_conversions/tf_eigen.h>
@@ -65,6 +66,7 @@ private:
 
     // The position and orientation from a vicon system:
     ros::Subscriber pose_vicon_sub_;
+    ros::Subscriber pose_sim_ground_truth;
     void pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg);
 
     ros::Subscriber imuSensorSub_;
@@ -72,11 +74,17 @@ private:
 
     ros::Subscriber laserScanSub_;
     void laserScanCallback(const sensor_msgs::LaserScanConstPtr& msg);
+
+    void simGroundTruthCallback(const nav_msgs::OdometryConstPtr& msg);
+
     void publishLidar(const sensor_msgs::LaserScanConstPtr& msg, string channel );
 
     int64_t last_joint_state_utime_;
     bool verbose_;
     mav::ins_t imu;
+    bot_core::pose_t pose_ground_truth;
+    bot_core::rigid_transform_t transf_ground_truth;
+
     tf::TransformListener listener_;
     ViconDerivator* vd_;
 };
@@ -115,6 +123,7 @@ App::App(ros::NodeHandle& node,
     ptu_effort_ = {0.0, 0.0};
 
     pose_vicon_sub_ = node_.subscribe(vicon_frame, 100, &App::pose_vicon_cb, this);
+    pose_vicon_sub_ = node_.subscribe("/hyq2max/ground_truth_odom", 100, &App::simGroundTruthCallback, this);
     imuSensorSub_ = node_.subscribe("/imu/imu", 100, &App::imuSensorCallback, this);
 
     laserScanSub_ = node_.subscribe("scan", 100, &App::laserScanCallback, this);
@@ -125,6 +134,56 @@ App::App(ros::NodeHandle& node,
 
 App::~App()  {
     delete vd_;
+}
+
+void App::simGroundTruthCallback(const nav_msgs::OdometryConstPtr &msg) {
+    pose_ground_truth.utime = msg->header.stamp.toNSec() / 1000;
+
+    Eigen::Affine3d world_to_base = Eigen::Affine3d::Identity();
+    Eigen::Quaterniond msg_orient(msg->pose.pose.orientation.w,
+                                  msg->pose.pose.orientation.x,
+                                  msg->pose.pose.orientation.y,
+                                  msg->pose.pose.orientation.z);
+    world_to_base.rotate(msg_orient);
+
+    pose_ground_truth.pos[0] = msg->pose.pose.position.x;
+    pose_ground_truth.pos[1] = msg->pose.pose.position.y;
+    pose_ground_truth.pos[2] = msg->pose.pose.position.z;
+
+    pose_ground_truth.orientation[0] = msg->pose.pose.orientation.w;
+    pose_ground_truth.orientation[1] = msg->pose.pose.orientation.x;
+    pose_ground_truth.orientation[2] = msg->pose.pose.orientation.y;
+    pose_ground_truth.orientation[3] = msg->pose.pose.orientation.z;
+
+    // Velocity must be in the base frame, but is provided in the world frame
+    Eigen::Vector3d vel;
+    vel << msg->twist.twist.linear.x,
+        msg->twist.twist.linear.y,
+        msg->twist.twist.linear.z;
+    vel = world_to_base.inverse() * vel;
+
+    pose_ground_truth.vel[0] = vel(0);
+    pose_ground_truth.vel[1] = vel(1);
+    pose_ground_truth.vel[2] = vel(2);
+
+    pose_ground_truth.rotation_rate[0] = msg->twist.twist.angular.x;
+    pose_ground_truth.rotation_rate[1] = msg->twist.twist.angular.y;
+    pose_ground_truth.rotation_rate[2] = msg->twist.twist.angular.z;
+
+    lcmPublish_.publish("POSE_GROUND_TRUTH", &pose_ground_truth);
+
+    transf_ground_truth.utime = pose_ground_truth.utime;
+    transf_ground_truth.trans[0] = msg->pose.pose.position.x;
+    transf_ground_truth.trans[1] = msg->pose.pose.position.y;
+    transf_ground_truth.trans[2] = msg->pose.pose.position.z;
+
+    transf_ground_truth.quat[0] = msg->pose.pose.orientation.w;
+    transf_ground_truth.quat[1] = msg->pose.pose.orientation.x;
+    transf_ground_truth.quat[2] = msg->pose.pose.orientation.y;
+    transf_ground_truth.quat[3] = msg->pose.pose.orientation.z;
+
+
+    lcmPublish_.publish("ODOM_GROUND_TRUTH", &transf_ground_truth);
 }
 
 
@@ -170,8 +229,9 @@ void App::joint_states_cb(const sensor_msgs::JointStateConstPtr& msg) {
 void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg) {
     Eigen::Vector3d pos;
     Eigen::Vector3d vicon_vel;
-    Eigen::Affine3d a;
-    a.setIdentity();
+    Eigen::Affine3d a = Eigen::Affine3d::Identity();
+
+
     a.translation() << msg->transform.translation.x,
                   msg->transform.translation.y,
                   msg->transform.translation.z;
@@ -181,8 +241,6 @@ void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg) {
                            msg->transform.rotation.y,
                            msg->transform.rotation.z);
     a.rotate(a_q);
-
-    Eigen::Affine3d c = a * bTf;
 
     if(first_vicon_transform) {
         tf::StampedTransform transform;
@@ -201,7 +259,9 @@ void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg) {
             ROS_INFO("First Vicon-to-base transform captured:");
             std::cout << bTf.matrix() << std::endl;
             first_vicon_transform = false;
+            Eigen::Affine3d c = a * bTf;
             pos << c.translation().x(), c.translation().y(), c.translation().z();
+
             vd_->updateMA(msg->header.stamp.toSec(), pos, vicon_vel);
             return;
 
@@ -211,7 +271,7 @@ void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg) {
             return;
         }
     } else {
-
+        Eigen::Affine3d c = a * bTf;
         bot_core::rigid_transform_t pose_msg;
         pose_msg.utime = (int64_t) floor(msg->header.stamp.toNSec() / 1000);
         pose_msg.trans[0] = msg->transform.translation.x;
@@ -228,6 +288,14 @@ void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg) {
         /* getting the estimated velocity */
         pos << c.translation().x(), c.translation().y(), c.translation().z();
         vd_->updateMA(msg->header.stamp.toSec(), pos, vicon_vel);
+
+        Eigen::Affine3d world_to_base = Eigen::Affine3d::Identity();
+        world_to_base.rotate(c.rotation());
+
+
+        // Velocity is expressed in the world frame.
+        //We rotate so its in base frame
+        vicon_vel = world_to_base.inverse() * vicon_vel;
 
         pose_msg3.utime = (int64_t) floor(msg->header.stamp.toNSec() / 1000);
         pose_msg3.pos[0] = c.translation().x();
